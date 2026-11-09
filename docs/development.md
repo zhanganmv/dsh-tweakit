@@ -9,7 +9,7 @@
 ```bash
 pnpm install
 pnpm check        # 提交前必跑：typecheck + lint + format:check + test + build
-pnpm test         # Vitest（39 例）
+pnpm test         # Vitest 单元/组件测试
 pnpm build        # 清理 lib/ 后生成 lib/host.js、lib/client.js、lib/types/**
 pnpm build:watch  # 只监听并重建两个 bundle，不重新生成 d.ts
 pnpm format       # Prettier
@@ -24,7 +24,7 @@ pnpm format       # Prettier
 因此：
 
 - 改完 `src/**` 必须跑 `pnpm build`，并把 `lib/**` 一起提交；
-- 不要手改 `lib/`，它由 `build.mjs` + `tsc` 生成；
+- 不要手改 `lib/`，它由 `scripts/build.mjs` + `tsc` 生成；
 - CI 会跑 `pnpm check` 后检查 `git status --porcelain -- lib`，不干净就失败；
 - `lib/types` 只声明类型；新增/删除源文件后必须重新 build，否则会残留旧声明。
 
@@ -115,7 +115,7 @@ dsh --profile tweakit-dev
 
 ## 8. 常见坑
 
-- **与旧尺寸插件的冲突**：两者都用 `!important` 改同一个面板，必须二选一。
+- **与其它尺寸插件冲突**：多个插件都用 `!important` 改同一个面板时必须二选一。
 - **`file:` 是快照**：改源码后不重新 add，看到的还是旧代码。
 - **desktop profile 独占**：应用运行时外部 CLI 会被拒绝。
 - **shell 标记变化**：`data-shortcut-modal="settings"` 是当前 shell 的标记；如果升级后样式失效，先看 tab 里的标记缺失提示。

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Tweak the DeepSeek Harness web UI from a native settings tab. First tweak: adjustable settings-window size (replaces hard-coded local sizing plugins).",
+  "description": "Tweak the DeepSeek Harness web UI from a native settings tab. First tweak: adjustable settings-window size.",
   "license": "MIT",
   "engines": {
     "node": ">=22.6"
@@ -38,8 +38,8 @@
     "manifestVersion": 1
   },
   "scripts": {
-    "build": "node scripts/clean.mjs && node build.mjs && tsc -p tsconfig.build.json",
-    "build:watch": "node build.mjs --watch",
+    "build": "node scripts/clean.mjs && node scripts/build.mjs && tsc -p tsconfig.build.json",
+    "build:watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

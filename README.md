@@ -6,7 +6,7 @@
 
 **把 DeepSeek Harness 的设置窗口，调成你顺手的大小。**
 
-`dsh-tweakit` 在设置里加一个 **界面调整** tab：默认、全屏、自定义三种尺寸模式，实时预览、自动保存、重启后还在。它替代旧的本地尺寸方案，也是后续所有界面 tweak 的统一入口。
+`dsh-tweakit` 在设置里加一个 **界面调整** tab：默认、全屏、自定义三种尺寸模式，实时预览、自动保存、重启后还在。它也是后续所有界面 tweak 的统一入口。
 
 <p align="center">
   <img src="docs/assets/settings-window.png" alt="DeepSeek Harness 设置 → 界面调整" width="760">
@@ -38,7 +38,7 @@ dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
 
 桌面端的 `desktop` profile 由应用独占，请在应用内的「插件」页安装同一个仓库地址。不要在和桌面应用同时运行时用 CLI 修改该 profile。
 
-> 如果之前装了 旧的本地尺寸插件，先卸载它：两者都靠 `!important` 抢同一个面板，同时存在会互相覆盖。
+> 如果之前装了其它强制设置面板尺寸的插件，先卸载它：它们都靠 `!important` 抢同一个面板，同时存在会互相覆盖。
 
 安装后打开 **设置 → 界面调整**；如果 tab 没出现，重启一次 `dsh` 进程。
 
@@ -62,7 +62,7 @@ dsh plugin --profile web remove dsh-tweakit
 
 `overlayTop` 是 macOS 交通灯预留的顶部安全区。即使边距设为 0，面板也不会钻到标题栏下面。窗口宽度 `< 768px` 时不接管，交给 DSH 自己的移动布局。
 
-首装默认值是 `custom / 1360×1000 / margin 24`，和旧方案的观感一致。点「恢复默认」会清空用户层配置，回到这组默认值。
+首装默认值是 `custom / 1360×1000 / margin 24`，接近大屏下常见的设置面板尺寸。点「恢复默认」会清空用户层配置，回到这组默认值。
 
 ## 兼容与权限
 
@@ -87,7 +87,7 @@ dsh plugin --profile web remove dsh-tweakit
 
 ## 参与贡献
 
-- **报 Bug / 提建议**：开 [issue](https://github.com/zhanganmv/dsh-tweakit/issues/new/choose)，附 DSH 版本、profile、复现步骤和截图（UI 问题最好有录屏）。
+- **报 Bug / 提建议**：开 [issue](https://github.com/zhanganmv/dsh-tweakit/issues/new)，附 DSH 版本、profile、复现步骤和截图（UI 问题最好有录屏）。
 - **改代码**：开发环境、测试、新增 tweak 的完整步骤见 [docs/development.md](docs/development.md)。
 - **给 AI agent**：仓库约定写在 [AGENTS.md](AGENTS.md)。
 - **设计先行**：每个功能先写 `docs/features/` 下的需求文档；不可逆决策补一篇 ADR。
@@ -106,7 +106,7 @@ dsh plugin --profile web remove dsh-tweakit
 
 ## English
 
-**dsh-tweakit** adds an **Interface** tab to DeepSeek Harness settings. The first tweak resizes the settings dialog — `default`, `full`, or `custom` (width, height, margin) — with live preview and persistence through DSH's settings service. It replaces hard-coded local sizing plugins and is the base for future UI tweaks.
+**dsh-tweakit** adds an **Interface** tab to DeepSeek Harness settings. The first tweak resizes the settings dialog — `default`, `full`, or `custom` (width, height, margin) — with live preview and persistence through DSH's settings service. It is also the base for future UI tweaks.
 
 ```bash
 dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit

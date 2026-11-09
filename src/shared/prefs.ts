@@ -68,9 +68,9 @@ export const PANEL_MODES: readonly PanelMode[] = ['default', 'full', 'custom']
 /**
  * First-run preferences.
  *
- * `custom` 1360×1000 with a 24px margin reproduces the local plugin this
- * package replaces (旧的本地尺寸插件), so replacing it is visually
- * neutral. Users who want the untouched shell pick `default`.
+ * `custom` 1360×1000 with a 24px margin reproduces the sizing this package
+ * replaces, so switching is visually neutral. Users who want the untouched
+ * shell pick `default`.
  */
 export const DEFAULT_SETTINGS_PANEL: SettingsPanelPrefs = {
   mode: 'custom',

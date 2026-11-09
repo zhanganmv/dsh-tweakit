@@ -4,7 +4,7 @@
 
 ## 报 Bug / 提建议
 
-请开 [issue](https://github.com/zhanganmv/dsh-tweakit/issues/new/choose)，并尽量附上：
+请开 [issue](https://github.com/zhanganmv/dsh-tweakit/issues/new)，并尽量附上：
 
 - DSH 版本、操作系统、使用的 profile（web / desktop）；
 - 复现步骤、期望行为、实际行为；

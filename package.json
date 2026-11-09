@@ -38,7 +38,7 @@
     "manifestVersion": 1
   },
   "scripts": {
-    "build": "node build.mjs && tsc -p tsconfig.build.json",
+    "build": "node scripts/clean.mjs && node build.mjs && tsc -p tsconfig.build.json",
     "build:watch": "node build.mjs --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
@@ -47,7 +47,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build",
+    "clean": "node scripts/clean.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.5"

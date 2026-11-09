@@ -29,8 +29,10 @@ DSH 的设置面板固定 **800×800**：在 4K 屏上浪费空间，在 1366×7
 ### Web profile
 
 ```bash
-dsh plugin --profile web add github:zhanganmv/dsh-tweakit
+dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
 ```
+
+`-w` 不能省：profile 目录本身是 pnpm workspace root。
 
 ### Desktop
 
@@ -44,7 +46,7 @@ dsh plugin --profile web add github:zhanganmv/dsh-tweakit
 
 ```bash
 # 升级：重新执行安装命令；如果 pnpm 命中缓存，追加 --force 重新拉取
-dsh plugin --profile web add github:zhanganmv/dsh-tweakit --force
+dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit --force
 
 # 卸载
 dsh plugin --profile web remove dsh-tweakit
@@ -107,7 +109,7 @@ dsh plugin --profile web remove dsh-tweakit
 **dsh-tweakit** adds an **Interface** tab to DeepSeek Harness settings. The first tweak resizes the settings dialog — `default`, `full`, or `custom` (width, height, margin) — with live preview and persistence through DSH's settings service. It replaces hard-coded local sizing plugins and is the base for future UI tweaks.
 
 ```bash
-dsh plugin --profile web add github:zhanganmv/dsh-tweakit
+dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
 ```
 
 Tested with DSH 0.2.1-rc.3 on the web and desktop profiles. It does not patch DSH, make network calls, or read credentials. Development setup: [docs/development.md](docs/development.md).

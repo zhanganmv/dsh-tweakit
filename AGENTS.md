@@ -28,7 +28,7 @@ pnpm format       # Prettier 写入
 DSH 里调试：优先用独立 profile，不要动正在使用的 desktop profile。
 
 ```bash
-dsh plugin --profile tweakit-dev add file:"$PWD"
+dsh plugin --profile tweakit-dev add -w file:"$PWD"
 dsh --profile tweakit-dev
 ```
 

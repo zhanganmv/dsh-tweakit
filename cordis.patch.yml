@@ -1,0 +1,8 @@
+# dsh-tweakit bundle patch.
+#
+# One Loader row under the profile root. The entry id is also the DSH settings
+# namespace the host half writes its preferences through, so keep both halves
+# of that identity in sync (`dsh-tweakit`).
+- insert:
+    - id: dsh-tweakit
+      name: dsh-tweakit

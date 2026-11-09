@@ -1,0 +1,305 @@
+/*
+ * dsh-tweakit section styles.
+ *
+ * Plain CSS (imported as text) with hand-prefixed class names: this plugin has
+ * no CSS-module build step and must never collide with shell or other plugin
+ * class names. Every color/radius comes from the shell's `--dsw-*` tokens so
+ * light and dark themes follow automatically.
+ */
+
+.tk-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  padding: 4px 2px 24px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.tk-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.tk-section-intro {
+  margin: 6px 0 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.tk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 16px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.tk-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tk-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.tk-card-desc {
+  margin: 4px 0 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tk-status {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.tk-status[data-tone='success'] {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.tk-status[data-tone='error'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.tk-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.tk-field[data-disabled='true'] {
+  opacity: 0.45;
+}
+
+.tk-field-mode {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.tk-label {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.tk-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tk-input {
+  box-sizing: border-box;
+  width: 76px;
+  padding: 5px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  text-align: right;
+}
+
+.tk-input:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -1px;
+}
+
+.tk-input:disabled {
+  cursor: default;
+}
+
+.tk-unit {
+  width: 18px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+}
+
+.tk-slider {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--dsw-alias-state-business-primary);
+  cursor: pointer;
+}
+
+.tk-slider:disabled {
+  cursor: default;
+}
+
+.tk-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tk-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tk-button {
+  padding: 5px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.tk-button:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tk-button:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 1px;
+}
+
+.tk-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.tk-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--dsw-alias-state-error-primary);
+  border-radius: 10px;
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tk-alert[data-tone='warn'] {
+  border-color: var(--dsw-alias-state-warn-primary);
+  color: var(--dsw-alias-state-warn-primary);
+}
+
+.tk-alert-text {
+  min-width: 0;
+}
+
+.tk-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.tk-segment {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tk-segment[aria-checked='true'] {
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: var(--dsw-elevation-subtle, 0 1px 2px rgba(0, 0, 0, 0.08));
+}
+
+.tk-segment:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 1px;
+}
+
+.tk-segment:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.tk-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tk-hint {
+  grid-column: 1 / -1;
+  margin-top: -2px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tk-input-wide {
+  width: 100%;
+  text-align: left;
+}
+
+.tk-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l2);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tk-switch[aria-checked='true'] {
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.tk-switch:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 2px;
+}
+
+.tk-switch:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.tk-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms ease;
+}
+
+.tk-switch[aria-checked='true'] .tk-switch-thumb {
+  transform: translateX(16px);
+}

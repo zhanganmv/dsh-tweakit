@@ -42,10 +42,15 @@ pnpm format       # Prettier
 
 不要直接在正在使用的 desktop profile 上验收。用一个独立 profile，避免影响当前会话：
 
+首次先基于 web 模板创建 profile（已有同名 profile 时跳过；`--from-default-profile` 会重置同名 profile）：
+
 ```bash
+dsh --profile tweakit-dev --from-default-profile web --dump-config >/dev/null
 dsh plugin --profile tweakit-dev add -w file:"$PWD"
 dsh --profile tweakit-dev
 ```
+
+`--dump-config` 让命令创建/刷新 profile 后直接退出，不启动界面。只装插件而不建模板时，新 profile 只带 `dsh-base`，没有 web 界面。
 
 `-w` 不能省：profile 目录本身是 pnpm workspace root，否则 pnpm 会拒绝把依赖加到根上。`file:` 安装的是**快照副本**，不是符号链接。改完代码、重新 `pnpm build` 后，要重新执行一次 `add`（或直接删除 profile 下的 `node_modules/dsh-tweakit` 再装）。
 

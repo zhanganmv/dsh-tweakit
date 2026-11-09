@@ -27,7 +27,10 @@ pnpm format       # Prettier 写入
 
 DSH 里调试：优先用独立 profile，不要动正在使用的 desktop profile。
 
+首次创建 profile（会重置同名 profile，已有则跳过）：
+
 ```bash
+dsh --profile tweakit-dev --from-default-profile web --dump-config >/dev/null
 dsh plugin --profile tweakit-dev add -w file:"$PWD"
 dsh --profile tweakit-dev
 ```
@@ -42,6 +45,7 @@ src/host/       Cordis 宿主半：volatile Config + settings 呈现策略
 src/client/     apply、configForms store、声明式表单、tab、样式、i18n
 test/           共享层 / store / 组件测试
 docs/           需求、架构、ADR、开发指南
+scripts/        clean / build 构建脚本
 lib/            **入库的生成物**，不要手改
 ```
 

@@ -3,13 +3,21 @@ import {
   DEFAULT_SETTINGS_PANEL,
   PANEL_LIMITS,
   TWEAK_DESCRIPTORS,
+  TWEAK_GROUPS,
+  TWEAK_GROUP_IDS,
+  TWEAK_IDS,
   TWEAK_UI,
   createDefaultPrefs,
   fromWire,
+  groupOfTweak,
+  groupsWithTweaks,
   normalizePrefs,
   normalizeSettingsPanel,
   resolvePanelSize,
+  resolveSelection,
+  type TweakSelection,
   toWire,
+  tweaksInGroup,
 } from '../src/shared/prefs'
 
 describe('normalizeSettingsPanel', () => {
@@ -168,5 +176,47 @@ describe('declarative tweak metadata', () => {
       expect(field.label.zh).not.toBe('')
       expect(field.label.en).not.toBe('')
     }
+  })
+})
+
+describe('group navigation model', () => {
+  it('declares every group exactly once and puts every tweak under a declared one', () => {
+    expect(TWEAK_GROUPS.map((group) => group.id)).toEqual([...TWEAK_GROUP_IDS])
+    expect(new Set(TWEAK_GROUP_IDS).size).toBe(TWEAK_GROUP_IDS.length)
+    for (const id of TWEAK_IDS) {
+      expect(TWEAK_GROUP_IDS).toContain(TWEAK_UI[id].group)
+    }
+  })
+
+  it('visits every tweak exactly once and only renders non-empty groups in order', () => {
+    const groups = groupsWithTweaks()
+    const visited = groups.flatMap((group) => tweaksInGroup(group.id))
+    expect(visited.sort()).toEqual([...TWEAK_IDS].sort())
+    const orders = groups.map((group) => group.order)
+    expect(orders).toEqual([...orders].sort((left, right) => left - right))
+    for (const group of groups) {
+      expect(tweaksInGroup(group.id)).not.toHaveLength(0)
+    }
+  })
+
+  it('orders tweaks inside a group by their declared order', () => {
+    const ordered = tweaksInGroup('dsh')
+    const orders = ordered.map((id) => TWEAK_UI[id].order)
+    expect(orders).toEqual([...orders].sort((left, right) => left - right))
+    expect(groupOfTweak('settings-panel')).toBe('dsh')
+  })
+
+  it('selects the first tweak of the first group on first render', () => {
+    expect(resolveSelection(null)).toEqual({ group: 'dsh', tweak: 'settings-panel' })
+  })
+
+  it('keeps a selection that still points at a registered tweak', () => {
+    const selection = { group: 'dsh' as const, tweak: 'settings-panel' as const }
+    expect(resolveSelection(selection)).toEqual(selection)
+  })
+
+  it('falls back to the first group when the remembered group is gone', () => {
+    const retired = { group: 'retired-plugin', tweak: 'nope' } as unknown as TweakSelection
+    expect(resolveSelection(retired)).toEqual({ group: 'dsh', tweak: 'settings-panel' })
   })
 })

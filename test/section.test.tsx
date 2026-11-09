@@ -124,5 +124,20 @@ describe('Tweaks section', () => {
     expect(screen.getByRole('heading', { name: '设置窗口' })).toBeTruthy()
     expect(screen.getByRole('spinbutton', { name: '宽度' })).toBeTruthy()
     expect(screen.getByRole('radio', { name: '全屏' })).toBeTruthy()
+    expect(screen.getByRole('navigation', { name: '配置项导航' })).toBeTruthy()
+  })
+
+  it('renders the navigation and points the panel at the selected tweak', () => {
+    const store = createStore(loadedState())
+    render(<TweakitSection store={store} copy={copyFor('en')} lang="en" close={() => {}} />)
+
+    const tab = screen.getByRole('tab', { name: 'Settings window' })
+    expect(tab.getAttribute('aria-selected')).toBe('true')
+    expect(tab.getAttribute('aria-controls')).toContain('-panel')
+    expect(screen.getByRole('tabpanel').getAttribute('aria-label')).toBe('Settings window')
+
+    // One owning group: no group header, no indentation, no group picker.
+    expect(screen.queryByRole('button', { name: 'DSH' })).toBeNull()
+    expect(screen.queryByRole('combobox')).toBeNull()
   })
 })

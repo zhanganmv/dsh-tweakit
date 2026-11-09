@@ -11,8 +11,10 @@
  *  1. add its id + preferences interface to {@link TweakPrefsMap};
  *  2. write a {@link TweakDescriptor} (defaults / normalize / wire mapping);
  *  3. register it in {@link TWEAK_IDS} and {@link TWEAK_DESCRIPTORS};
- *  4. the generic `normalizePrefs` / `toWire` / `fromWire` paths pick it up with
- *     no further changes (see `docs/architecture/plugin-architecture.md`).
+ *  4. add its {@link TweakUi} entry, including the owning {@link TweakGroupId};
+ *  5. the generic `normalizePrefs` / `toWire` / `fromWire` paths and the
+ *     two-level navigation pick it up with no further changes (see
+ *     `docs/architecture/plugin-architecture.md`).
  */
 
 /** How the settings panel gets its size. */
@@ -116,6 +118,63 @@ export interface LocalizedText {
   readonly en: string
 }
 
+/**
+ * Presentation metadata shared by every group, without its id (the id is
+ * derived from the declaration below so the id union stays in one place).
+ */
+interface TweakGroupMeta {
+  /** Group order inside the page navigation (ascending). */
+  readonly order: number
+  readonly title: LocalizedText
+  readonly description?: LocalizedText
+}
+
+/**
+ * The declared groups, in presentation order.
+ *
+ * A group is an *owner*: `dsh` collects tweaks for the harness itself, `other`
+ * is the fallback for tweaks whose owner is not (or no longer) declared. Plugin
+ * groups are added here when this package starts covering one; there is no
+ * runtime registration (see ADR-0004).
+ */
+export const TWEAK_GROUPS = [
+  {
+    id: 'dsh',
+    order: 10,
+    title: { zh: 'DSH 本体', en: 'DSH' },
+    description: {
+      zh: 'DeepSeek Harness 自身的界面调整。',
+      en: 'Tweaks for the DeepSeek Harness shell itself.',
+    },
+  },
+  {
+    id: 'other',
+    order: 999,
+    title: { zh: '其它', en: 'Other' },
+    description: {
+      zh: '尚未归入已声明分组的调整项。',
+      en: 'Tweaks whose owner is not declared as a group.',
+    },
+  },
+] as const satisfies readonly (TweakGroupMeta & { readonly id: string })[]
+
+/** Stable group identifier, derived from {@link TWEAK_GROUPS}. */
+export type TweakGroupId = (typeof TWEAK_GROUPS)[number]['id']
+
+/** One declared group with its derived id. */
+export interface TweakGroup extends TweakGroupMeta {
+  readonly id: TweakGroupId
+}
+
+/** Every declared group id, in declaration order. */
+export const TWEAK_GROUP_IDS: readonly TweakGroupId[] = TWEAK_GROUPS.map((group) => group.id)
+
+/** One entry of the group navigation, already localized for rendering. */
+export interface TweakSelection {
+  readonly group: TweakGroupId
+  readonly tweak: TweakId
+}
+
 /** Shared shape of one declarative tweak field. */
 interface TweakFieldBase<P> {
   /** Stable key used for DOM ids and test selectors. */
@@ -164,9 +223,11 @@ export interface TweakTextField<P> extends TweakFieldBase<P> {
 export type TweakField<P> =
   TweakNumberField<P> | TweakSegmentedField<P> | TweakSwitchField<P> | TweakTextField<P>
 
-/** Presentation metadata for one tweak group, rendered by the generic form. */
+/** Presentation metadata for one tweak, rendered by the generic form. */
 export interface TweakUi<P> {
-  /** Group order inside the page (ascending). */
+  /** Owning group; navigation renders the tweak under this group. */
+  readonly group: TweakGroupId
+  /** Order inside the group (ascending). */
   readonly order: number
   readonly title: LocalizedText
   readonly description: LocalizedText
@@ -284,6 +345,7 @@ export const TWEAK_UI: {
   readonly [K in TweakId]: TweakUi<TweakPrefsMap[K]>
 } = {
   'settings-panel': {
+    group: 'dsh',
     order: 10,
     title: { zh: '设置窗口', en: 'Settings window' },
     description: {
@@ -405,4 +467,67 @@ export function fromWire(wire: unknown): TweakitPrefs {
   const tweaks = {} as TweakPrefsMap
   for (const id of TWEAK_IDS) writeTweak(tweaks, id, descriptorOf(id).fromWire(fields))
   return { version: PREFS_VERSION, tweaks }
+}
+
+/**
+ * The declared group that owns one tweak.
+ * @param id - registered tweak id.
+ * @returns the declared group id; an undeclared owner falls back to `other`.
+ */
+export function groupOfTweak(id: TweakId): TweakGroupId {
+  const declared: string = TWEAK_UI[id].group
+  return TWEAK_GROUP_IDS.find((groupId) => groupId === declared) ?? 'other'
+}
+
+/**
+ * Every tweak under one group, in presentation order.
+ * @param group - declared group id.
+ * @returns the matching tweak ids, ordered by their `order` field.
+ */
+export function tweaksInGroup(group: TweakGroupId): TweakId[] {
+  return TWEAK_IDS.filter((id) => groupOfTweak(id) === group).sort(
+    (left, right) => TWEAK_UI[left].order - TWEAK_UI[right].order,
+  )
+}
+
+/**
+ * Declared groups that own at least one tweak, in presentation order.
+ * @returns the non-empty groups; empty groups are not rendered.
+ */
+export function groupsWithTweaks(): readonly TweakGroup[] {
+  return [...TWEAK_GROUPS]
+    .filter((group) => tweaksInGroup(group.id).length > 0)
+    .sort((left, right) => left.order - right.order)
+}
+
+/**
+ * Repair a selection after a tweak or group disappears.
+ *
+ * Keeps a still-valid selection untouched, falls back to the first tweak of
+ * the same group when only its tweak is gone, and otherwise selects the first
+ * tweak of the first non-empty group.
+ *
+ * @param previous - current selection, or `null` on first render.
+ * @returns a selection that points at a registered tweak.
+ */
+export function resolveSelection(previous: TweakSelection | null): TweakSelection {
+  const groups = groupsWithTweaks()
+  if (previous !== null) {
+    const group = groups.find((entry) => entry.id === previous.group)
+    if (group !== undefined) {
+      const tweaks = tweaksInGroup(group.id)
+      if (tweaks.includes(previous.tweak)) return { group: group.id, tweak: previous.tweak }
+      const firstInGroup = tweaks[0]
+      if (firstInGroup !== undefined) return { group: group.id, tweak: firstInGroup }
+    }
+  }
+
+  const group = groups[0]
+  const tweak = group === undefined ? undefined : tweaksInGroup(group.id)[0]
+  if (group === undefined || tweak === undefined) {
+    // Unreachable while at least one tweak is registered; keeps the invariant
+    // visible instead of rendering a blank page.
+    throw new Error('dsh-tweakit: no tweak is registered')
+  }
+  return { group: group.id, tweak }
 }

@@ -2,10 +2,10 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态 | 已实现（0.1.0） |
+| 状态 | 已实现（0.1.0；0.2.0 分组导航 M1/M2） |
 | 日期 | 2026-11-09 |
-| 适用版本 | dsh-tweakit 0.1.x |
-| 关联 | [ADR-0001](decisions/0001-persist-prefs-in-dsh-settings.md)、[ADR-0002](decisions/0002-settings-panel-sizing-modes.md) |
+| 适用版本 | dsh-tweakit 0.1.x – 0.2.x |
+| 关联 | [ADR-0001](decisions/0001-persist-prefs-in-dsh-settings.md)、[ADR-0002](decisions/0002-settings-panel-sizing-modes.md)、[ADR-0004](decisions/0004-group-by-owner.md) |
 
 ## 1. 目标与设计原则
 
@@ -154,6 +154,7 @@ export const TWEAK_DESCRIPTORS = { 'settings-panel': settingsPanelTweak }
 ```ts
 export const TWEAK_UI = {
   'settings-panel': {
+    group: 'dsh', // 归属组（见 5.3.1）；order 是组内顺序
     order: 10,
     title: { zh: '设置窗口', en: 'Settings window' },
     description: { zh: '...', en: '...' },
@@ -171,6 +172,24 @@ export const TWEAK_UI = {
 `TweakForm` 按 `kind` 映射到 5 种通用控件（segmented / slider / number / switch / text），并求值 `visibleWhen` / `disabledWhen`；`TweakCard` 负责标题、保存状态、重置和可选 `extra`。复杂内容（尺寸读数、实时预览）通过 `TWEAK_EXTRAS` 逃生口注入，不阻塞通用渲染器。
 
 字段集合与 prefs 键集合、wire 映射由单测锁死（`test/prefs.test.ts`），防止新增字段时 UI 与持久化漂移。
+
+#### 5.3.1 分组（归属）
+
+`TweakUi.group` 是必填的 `TweakGroupId`，指向 `TWEAK_GROUPS` 里的一个组；组的语义是「这个 tweak 调的是谁的界面」：
+
+```ts
+export const TWEAK_GROUPS = [
+  { id: 'dsh', order: 10, title: { zh: 'DSH 本体', en: 'DSH' } },
+  { id: 'other', order: 999, title: { zh: '其它', en: 'Other' } }, // 运行期兜底
+] as const satisfies readonly (TweakGroupMeta & { readonly id: string })[]
+
+export type TweakGroupId = (typeof TWEAK_GROUPS)[number]['id']
+```
+
+- 纯展示元数据：不进 wire、不改默认值、不升 `PREFS_VERSION`。
+- 组数 = 1 时设置页省略组头；≥ 2 时左侧导航出现可折叠的组头（手风琴，同时只展开一组）。
+- 归属写错是编译错误；运行期由 `groupOfTweak` 回落 `other`，不丢字段。
+- 本期不提供外部注册，理由与备选见 [ADR-0004](decisions/0004-group-by-owner.md)。
 
 ### 5.4 宿主侧
 
@@ -191,7 +210,7 @@ const Config = z.object({
 ### 5.5 新增一个 tweak 的步骤
 
 1. `src/shared/prefs.ts`：定义 `XxxPrefs`，加入 `TweakPrefsMap`，写 descriptor，注册进 `TWEAK_IDS` / `TWEAK_DESCRIPTORS`；
-2. 同一文件：在 `TWEAK_UI` 里声明该 tweak 的标题、顺序和 `fields`；
+2. 同一文件：在 `TWEAK_UI` 里声明该 tweak 的标题、`group`（归属组，需已在 `TWEAK_GROUPS` 中声明）、组内顺序和 `fields`；
 3. `src/host/index.ts`：给 Config 追加扁平 volatile 字段；
 4. `src/client/index.ts`：若该 tweak 需要 DOM 副作用，在 `applyPanelStyle` 同级加一个 effect；纯表单 tweak 不需要改 client；
 5. 需要读数/预览时在 `TweakitSection` 的 `TWEAK_EXTRAS` 里加一个函数；
@@ -227,7 +246,8 @@ v1 只支持内置 tweak。后续可以暴露 `ctx.tweakit.registerTweak(...)` �
 
 - tab 通过 `settings.section` 注册，`id = tweakit`、`order = 90`、`label` 为 locale thunk。
 - 组件 props 来自 `PropsRuntime<'settings.section'>`（含 `close`），加上注册时 `inject` 的面（store、actions）。
-- tab 内部：标题区（当前 tweak 数、保存状态）+ 每个 tweak 一张分组卡片。
+- tab 内部：页头（标题、说明、保存状态）→ 左侧两级导航（group 可折叠 → tweak，`TweakNav`）→ 右侧只渲染当前 tweak 的卡片；组数 = 1 时隐藏组头与缩进。
+- 导航宽度按本页可用宽度降级（≥ 720 / 560–719 / < 560），用 `ResizeObserver` 量页面自身，不读视口。
 - 文案：v1 用 `client/i18n.ts` 的 zh/en 字典，按 `navigator.language` / `document.documentElement.lang` 选择；后续接入 `ctx.locale`（`LocaleFace`）实现实时切换。
 
 ## 9. 安全
@@ -270,13 +290,14 @@ src/
 │  ├─ config-form.ts      ✅ ctx.configForms 结构化类型
 │  ├─ store.ts            ✅ 乐观预览 + 防抖 mutate + unset 重置
 │  ├─ TweakForm.tsx       ✅ 声明式字段 → 5 种通用控件
-│  ├─ TweakCard.tsx       ✅ 通用分组卡片
-│  ├─ TweakitSection.tsx  ✅ settings.section 页面 + extra 逃生口
+│  ├─ TweakCard.tsx       ✅ 通用 tweak 卡片
+│  ├─ TweakNav.tsx        ✅ 两级导航（组折叠 + tweak tablist + 紧凑下拉）
+│  ├─ TweakitSection.tsx  ✅ settings.section 页面 + 宽度分档 + extra 逃生口
 │  ├─ style.ts            ✅ 单例样式控制器
 │  ├─ ui-style.ts         ✅ 静态 section 样式注入
 │  └─ i18n.ts             ✅ zh/en 页面文案（字段文案在 TWEAK_UI）
 ├─ types/assets.d.ts      ✅ CSS 文本导入声明
-test/                     ✅ 5 个文件 / 39 例
+test/                     ✅ 6 个文件 / 53 例
 docs/                     ✅ 本设计与 ADR
 ## 13. 已知限制
 
@@ -293,8 +314,16 @@ docs/                     ✅ 本设计与 ADR
 - [ADR-0001：用 DSH settings 服务持久化偏好](decisions/0001-persist-prefs-in-dsh-settings.md)
 - [ADR-0002：设置面板尺寸三模式](decisions/0002-settings-panel-sizing-modes.md)
 - [ADR-0003：配置驱动的 tweak 表单](decisions/0003-config-driven-forms.md)
+- [ADR-0004：配置按归属分组，本期不做运行时注册](decisions/0004-group-by-owner.md)
 ## 15. 实现与验收摘要（0.1.0）
 
 - 宿主：`Config` 4 个 volatile 字段；`settings.configure({ auto: false })`；无自建路由，持久化完全交给 DSH settings 服务。
 - 客户端：`ctx.configForms` 读快照、按 revision fence 提交 `mutate`；启动即按持久化值应用样式（加载完成前不接管，避免闪烁）；tab 表单由 `TWEAK_UI.fields` 自动渲染；实时预览、200ms 防抖、失败回滚、`unset` 重置；`ctx.locale` 决定文案；所有副作用挂在 fiber effect 上。
 - 验收：`tweakit-dev` profile 实测三模式、重启保持、窄屏不接管、控制台无异常；数据写入 `cordis.patch.yml`。详见[需求设计第 15 节](../features/2026-11-09-settings-window-size.md#15-验收记录2026-11-09)。
+
+### 实现与验收摘要（0.2.0 分组导航，M1 + M2）
+
+- 模型：`TWEAK_GROUPS` / `TweakGroupId` / `TweakSelection`；`TweakUi.group` 必填；纯函数 `groupOfTweak` / `tweaksInGroup` / `groupsWithTweaks` / `resolveSelection`。
+- 导航：`TweakNav` 持有展开状态与会话内记忆，手风琴；Section 持有选择并用 `resolveSelection` 兜底；组数 = 1 隐藏组头；< 560px 降级为下拉 + chips。
+- 无障碍：组头 `aria-expanded` / `aria-controls`，tweak 用 `role="tablist"` + roving tabindex + 焦点即激活，panel 用 `aria-label`（折叠组时 tab 不在无障碍树中）。
+- 验证：`pnpm typecheck` / `lint` / `format:check` / `test`（53 例）全绿；`pnpm build` 与 `tweakit-dev` 手工验收见[需求设计 §17](../features/2026-11-09-tweak-grouping.md#17-验收记录)。

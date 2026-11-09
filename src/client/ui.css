@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 760px;
+  max-width: 880px;
   padding: 4px 2px 24px;
   color: var(--dsw-alias-label-primary);
 }
@@ -28,6 +28,193 @@
   color: var(--dsw-alias-label-tertiary);
   font-size: 13px;
   line-height: 20px;
+}
+
+/* Two-level navigation: 200px rail, 156px when tight, stacked chips under 560px. */
+.tk-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.tk-layout[data-mode='narrow'] {
+  grid-template-columns: 156px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.tk-layout[data-mode='compact'] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.tk-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-height: min(520px, calc(100vh - 220px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tk-nav[data-compact='true'] {
+  gap: 8px;
+  max-height: none;
+  overflow: visible;
+}
+
+.tk-nav-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tk-nav-group-head:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tk-nav-group-head:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -1px;
+}
+
+.tk-nav-group[data-active='true'] > .tk-nav-group-head {
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* Collapsed but still the group whose tweak is on screen: keep a thin marker. */
+.tk-nav-group[data-collapsed='true'] > .tk-nav-group-head {
+  border-left: 2px solid var(--dsw-alias-state-business-primary);
+  border-radius: 0;
+  padding-left: 4px;
+}
+
+.tk-nav-chevron {
+  flex: none;
+  width: 10px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.tk-nav-group-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-nav-count {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.tk-nav[data-headers='true'] .tk-nav-list {
+  padding-left: 12px;
+}
+
+.tk-nav-item {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tk-nav-item:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.tk-nav-item[aria-selected='true'] {
+  border-left-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 500;
+}
+
+.tk-nav-item:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -1px;
+}
+
+.tk-nav-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+}
+
+.tk-nav-select:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -1px;
+}
+
+.tk-nav-chips {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tk-nav-chips .tk-nav-item {
+  flex: none;
+  width: auto;
+  padding: 4px 10px;
+  border-left: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.tk-nav-chips .tk-nav-item[aria-selected='true'] {
+  border-bottom-color: var(--dsw-alias-state-business-primary);
+}
+
+.tk-content {
+  min-width: 0;
+  max-width: 640px;
+}
+
+.tk-panel:focus {
+  outline: none;
+}
+
+.tk-panel:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 2px;
 }
 
 .tk-card {

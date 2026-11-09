@@ -12,6 +12,12 @@ export interface Copy {
   readonly tabLabel: string
   readonly title: string
   readonly intro: string
+  /** Accessible name of the group / tweak navigation. */
+  readonly navLabel: string
+  /** Label of the compact group picker. */
+  readonly groupLabel: string
+  /** Shown when no tweak is registered at all. */
+  readonly empty: string
   readonly reset: string
   readonly retry: string
   readonly loading: string
@@ -33,6 +39,9 @@ const zh: Copy = {
   tabLabel: '界面调整',
   title: '界面调整',
   intro: '按需调整 DeepSeek Harness 的界面细节。改动会立即预览，并保存到当前配置档。',
+  navLabel: '配置项导航',
+  groupLabel: '分组',
+  empty: '暂没有可调整的界面项。',
   reset: '恢复默认',
   retry: '重试',
   loading: '正在读取设置…',
@@ -56,6 +65,9 @@ const en: Copy = {
   title: 'Tweaks',
   intro:
     'Adjust DeepSeek Harness UI details. Changes preview immediately and are saved to the current profile.',
+  navLabel: 'Tweaks navigation',
+  groupLabel: 'Group',
+  empty: 'No tweaks are registered yet.',
   reset: 'Reset to defaults',
   retry: 'Retry',
   loading: 'Loading settings…',

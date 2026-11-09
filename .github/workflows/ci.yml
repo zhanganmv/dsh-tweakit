@@ -23,10 +23,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - name: Verify committed lib is up to date
-        run: |
-          if [ -n "$(git status --porcelain -- lib)" ]; then
-            git status --short -- lib
-            echo "::error::lib/ is stale; run pnpm build and commit the result."
-            exit 1
-          fi
+      - name: Verify npm package contents
+        run: npm pack --dry-run

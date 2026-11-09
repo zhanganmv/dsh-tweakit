@@ -46,7 +46,7 @@ src/client/     apply、configForms store、声明式表单、tab、样式、i18
 test/           共享层 / store / 组件测试
 docs/           需求、架构、ADR、开发指南
 scripts/        clean / build 构建脚本
-lib/            **入库的生成物**，不要手改
+lib/            构建产物，不入库（发布时 prepack 生成）
 ```
 
 ## 不可破坏的约束
@@ -58,6 +58,7 @@ lib/            **入库的生成物**，不要手改
 - **不用 localStorage / sessionStorage**：desktop 端口动态、origin 会变，持久化会丢。
 - **样式作用域**：只命中 `[role="dialog"][data-shortcut-modal="settings"]`，样式节点带 `data-dsh-tweakit-panel`；`<768px` 不注入。
 - **客户端 bundle 形态**：必须是 `window.__ModuleLoader__.load({ id, factory(require) })` 外壳；React、`react/jsx-runtime`、`react-dom`、`@deepseek-ai/*` 保持 external。
+- **构建产物不入库**：`lib/` 只在本地和 npm tarball 里出现；不要 `git add lib`。
 - **副作用必须可回收**：样式、监听、定时器都挂在 fiber effect 上，卸载/HMR 后不能有残留。
 - **双语**：用户可见文案同时提供 zh/en（`i18n.ts` 与 `TWEAK_UI`）。
 - **不联网、不读凭证、不写业务文件**；只读写自己的 settings 命名空间 `dsh-tweakit`。
@@ -67,7 +68,7 @@ lib/            **入库的生成物**，不要手改
 1. 先找/写需求文档（`docs/features/`）；行为或数据模型变化先更新文档。
 2. 先写或改测试：纯逻辑放 `shared/` 做纯函数测试，store 用 fake form + fake timers。
 3. 实现，保持改动最小；不要顺手重构无关模块。
-4. 如果改了 `src/**`，跑 `pnpm build` 并提交 `lib/**` 的变化。
+4. 如果改了 `src/**`，跑 `pnpm build` 验证；`lib/` 不入库，发布时由 `prepack` 生成。
 5. 更新 README / docs 索引 / feature 文档状态（涉及用户可见行为时）。
 6. `pnpm check` 必须全绿；UI 改动在 dev profile 手工验收（见 docs/development.md 第 3.3 节）。
 7. 提交信息用 Conventional Commits（`feat:`、`fix:`、`docs:`、`test:`、`chore:`），一次提交只做一件事。
@@ -89,7 +90,7 @@ lib/            **入库的生成物**，不要手改
 - 修改实时预览，重启后保持；「恢复默认」清空用户层。
 - `default` 模式无样式节点；卸载后无残留。
 - `<768px` 不接管；控制台无异常。
-- `lib/` 与源码一致（CI 会检查）。
+- `npm pack --dry-run` 能看到 `lib/`，且由当前源码构建。
 
 ## 不要做
 

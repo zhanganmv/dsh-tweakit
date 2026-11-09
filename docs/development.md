@@ -17,16 +17,15 @@ pnpm format       # Prettier
 
 `pnpm check` 里的 `build` 会先清空 `lib/`，避免已删除源文件留下陈旧的 `.d.ts`。
 
-## 2. 构建产物要提交
+## 2. 构建产物与发布
 
-`lib/` **入库**，这是有意为之：用户通过 `dsh plugin add github:...` 安装时，DSH 直接使用仓库里的构建产物，不需要在用户机器上跑 prepare/build，也不受 pnpm「build scripts 需要 allowBuilds」的限制。
+`lib/` 是生成物，**不入库**（`.gitignore` 已忽略）。用户从 npm 安装，npm 包里的 `lib/` 在发布打包时生成：
 
-因此：
-
-- 改完 `src/**` 必须跑 `pnpm build`，并把 `lib/**` 一起提交；
-- 不要手改 `lib/`，它由 `scripts/build.mjs` + `tsc` 生成；
-- CI 会跑 `pnpm check` 后检查 `git status --porcelain -- lib`，不干净就失败；
-- `lib/types` 只声明类型；新增/删除源文件后必须重新 build，否则会残留旧声明。
+- 本地开发：`pnpm build` 生成 `lib/`；`pnpm check` 会先 clean 再重建。
+- 发布：`prepack` 在 `npm publish` / `npm pack` 前自动执行 `pnpm build`；`files` 只把 `lib/`、`cordis.patch.yml`、`README.md`、`LICENSE` 打进 tarball。
+- 改完 `src/**` 后跑一次 `pnpm build` 验证，但不要提交 `lib/`。
+- 用 `npm pack --dry-run` 检查最终包内容。
+- 正式发布由 GitHub Actions 的 **Trusted Publisher** 完成（`.github/workflows/publish.yml`）：创建 GitHub Release 即触发，带 provenance；本地 `npm publish` 只作为紧急回退（需要 npm 2FA）。
 
 构建形态：
 
@@ -52,7 +51,7 @@ dsh --profile tweakit-dev
 
 `--dump-config` 让命令创建/刷新 profile 后直接退出，不启动界面。只装插件而不建模板时，新 profile 只带 `dsh-base`，没有 web 界面。
 
-`-w` 不能省：profile 目录本身是 pnpm workspace root，否则 pnpm 会拒绝把依赖加到根上。`file:` 安装的是**快照副本**，不是符号链接。改完代码、重新 `pnpm build` 后，要重新执行一次 `add`（或直接删除 profile 下的 `node_modules/dsh-tweakit` 再装）。
+`-w` 不能省：profile 目录本身是 pnpm workspace root，否则 pnpm 会拒绝把依赖加到根上。`lib/` 不入库，`file:` 安装前先 `pnpm build`，否则快照里没有构建产物；`file:` 安装的是**快照副本**，不是符号链接。改完代码、重新 `pnpm build` 后，要重新执行一次 `add`（或直接删除 profile 下的 `node_modules/dsh-tweakit` 再装）。
 
 ### 3.2 desktop profile
 
@@ -114,9 +113,10 @@ dsh --profile tweakit-dev
 ## 7. 发布与版本
 
 - 版本号在 `package.json`，语义化递增；prefs 的 `version` 字段独立演进，旧值通过 `normalize` 兼容。
-- 发布 GitHub 版本：更新版本号与文档 → `pnpm check` → 提交 → 打 tag（如 `v0.2.0`）→ push tag → 写 Release notes。
-- 目前 `private: true`，不发布 npm；安装形态是 GitHub 仓库。若以后发 npm，需要补 `publishConfig` 并调整 `files`。
-- `lib/` 必须与源码同批提交，CI 会校验。
+- 发布 npm：更新版本号 → `pnpm check` → 提交并 push → 打 tag（如 `v0.2.0`）→ 创建 GitHub Release；`.github/workflows/publish.yml` 通过 Trusted Publisher 自动发布，带 provenance。
+- Trusted Publisher 首次配置：npm 包设置 → Trusted Publisher → GitHub Actions，仓库 `zhanganmv/dsh-tweakit`、workflow `publish.yml`；之后发布不再需要长期 token。
+- 本地紧急发布：`npm publish`（需要 npm 2FA），发布前 `prepack` 会自动构建。
+- `lib/` 不入库，npm tarball 中的 `lib/` 由发布流程生成。
 
 ## 8. 常见坑
 

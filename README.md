@@ -1,6 +1,7 @@
 # dsh-tweakit
 
 [![CI](https://github.com/zhanganmv/dsh-tweakit/actions/workflows/ci.yml/badge.svg)](https://github.com/zhanganmv/dsh-tweakit/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/dsh-tweakit.svg)](https://www.npmjs.com/package/dsh-tweakit)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/development.md)
 
@@ -29,14 +30,14 @@ DSH 的设置面板固定 **800×800**：在 4K 屏上浪费空间，在 1366×7
 ### Web profile
 
 ```bash
-dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
+dsh plugin --profile web add -w dsh-tweakit
 ```
 
 `-w` 不能省：profile 目录本身是 pnpm workspace root。
 
 ### Desktop
 
-桌面端的 `desktop` profile 由应用独占，请在应用内的「插件」页安装同一个仓库地址。不要在和桌面应用同时运行时用 CLI 修改该 profile。
+桌面端的 `desktop` profile 由应用独占，请在应用内的「插件」页安装 npm 包 `dsh-tweakit`。不要在和桌面应用同时运行时用 CLI 修改该 profile。
 
 > 如果之前装了其它强制设置面板尺寸的插件，先卸载它：它们都靠 `!important` 抢同一个面板，同时存在会互相覆盖。
 
@@ -46,7 +47,7 @@ dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
 
 ```bash
 # 升级：重新执行安装命令；如果 pnpm 命中缓存，追加 --force 重新拉取
-dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit --force
+dsh plugin --profile web add -w dsh-tweakit@latest --force
 
 # 卸载
 dsh plugin --profile web remove dsh-tweakit
@@ -109,7 +110,7 @@ dsh plugin --profile web remove dsh-tweakit
 **dsh-tweakit** adds an **Interface** tab to DeepSeek Harness settings. The first tweak resizes the settings dialog — `default`, `full`, or `custom` (width, height, margin) — with live preview and persistence through DSH's settings service. It is also the base for future UI tweaks.
 
 ```bash
-dsh plugin --profile web add -w github:zhanganmv/dsh-tweakit
+dsh plugin --profile web add -w dsh-tweakit
 ```
 
 Tested with DSH 0.2.1-rc.3 on the web and desktop profiles. It does not patch DSH, make network calls, or read credentials. Development setup: [docs/development.md](docs/development.md).

@@ -22,7 +22,7 @@
 pnpm check
 ```
 
-如果改了 `src/**`，还要 `pnpm build` 并提交 `lib/**` 的构建产物——CI 会校验它是否与源码一致。
+如果改了 `src/**`，跑 `pnpm build` 验证即可；`lib/` 不入库，发布时由 `prepack` 生成。
 
 ## Pull Request
 

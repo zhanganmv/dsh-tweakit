@@ -243,7 +243,7 @@ v1 只支持内置 tweak。后续可以暴露 `ctx.tweakit.registerTweak(...)` �
 - **客户端半**：esbuild → CJS，再用 `window.__ModuleLoader__.load({ id, factory(require) })` 外壳包起来；`react`、`react/jsx-runtime`、`react-dom`、`@deepseek-ai/*` 全部 external，由平台模块表提供。
 - **类型**：`tsc --emitDeclarationOnly` → `lib/types/**`；`exports` 同时提供 `types` 与 `default`。
 - **包清单**：`dsh.bundle.patch`（装哪个 Loader row）、`dsh.client.platform = 'web'`、`manifestVersion: 1`。
-- **仓库形态**：仓库公开，`private: true` 表示不发 npm，用户通过 GitHub 安装；`lib/` 随源码入库，CI 校验构建产物与源码一致。版本语义按 minor 递增，prefs `version` 字段独立演进。
+- **仓库形态**：仓库公开，发布到 npm；`lib/` 不入库，发布时由 `prepack` 构建，CI 用 `npm pack --dry-run` 校验包内容。版本语义按 minor 递增，prefs `version` 字段独立演进。
 
 ## 11. 测试策略
 

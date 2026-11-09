@@ -58,7 +58,15 @@ fields: [
 
 ## 安装
 
-已装入 desktop profile（2026-11-09）：
+从 GitHub 源码安装：
+
+```bash
+dsh plugin --profile web add github:zhanganmv/dsh-tweakit
+# desktop profile 由应用管理，可在应用内「插件」页安装，或使用应用自带 pnpm：
+dsh plugin --profile desktop add github:zhanganmv/dsh-tweakit
+```
+
+当前已验证的 desktop profile 安装方式（2026-11-09）：
 
 - `~/.dsh/profiles/desktop/package.json` 的 `dependencies` 增加 `dsh-tweakit: file:/Users/admin/Github/zhanganmv/dsh-tweakit`；
 - `dsh.profile.bundles` 末尾追加 `dsh-tweakit`；
@@ -66,6 +74,14 @@ fields: [
 - 通过 HMR 热加载生效，无需重启：宿主半换版后旧路由 `/tweakit/api/prefs` 从 401 变为 404，证明运行中的实例已重载。
 
 注意：`file:` 安装的是**快照副本**（`~/.dsh/profiles/desktop/node_modules/dsh-tweakit`），改完源码后需要在应用内「插件」页重新安装，或在该 profile 用应用自带 pnpm 重新 `add`，新代码才会生效。
+
+## 兼容与权限
+
+- **DSH 版本**：开发与验收基于 `0.2.1-rc.3`；更低版本未验证。
+- **Profile**：`web` 与 `desktop` 均可；插件只依赖 `settings`、`configForms`、`slots` 三个客户端服务。
+- **权限**：不发起网络请求、不读取凭证、不写业务文件；只注册 `settings.section` 一个 tab，并通过 DSH settings 服务读写自己的命名空间 `dsh-tweakit`。
+- **作用范围**：仅向设置面板（`[role="dialog"][data-shortcut-modal="settings"]`）注入尺寸样式；`< 768px` 不接管。
+- **已知限制**：依赖 `data-shortcut-modal` 标记，未来 shell 改名会让尺寸失效（tab 内会提示）；declarative 表单目前覆盖数字/滑杆/分段/开关/文本五类字段。
 
 ## 开发
 

@@ -13,7 +13,7 @@
 
 设计原则：
 
-1. **双半职责清晰**：客户端只做 UI、状态和 DOM；宿主只做持久化、进程和文件。两端只通过 `shared/` 的纯函数和一条 HTTP 契约通信。
+1. **双半职责清晰**：客户端只做 UI、状态和 DOM；宿主只做持久化、进程和文件。两端只通过 `shared/` 的纯函数和 DSH 的 settings/configForms 契约通信。
 2. **共享层无环境依赖**：`src/shared/` 不 import DOM、Node、React、DSH 运行时，保证双端与测试可复用。
 3. **单一事实来源**：默认值、范围、归一化、wire 映射只在 `shared/prefs.ts` 定义一次。
 4. **扩展点是数据，不是分支**：新增 tweak = 注册一个 descriptor + 一个组件，不修改设置页骨架、不改路由分支。
@@ -243,7 +243,7 @@ v1 只支持内置 tweak。后续可以暴露 `ctx.tweakit.registerTweak(...)` �
 - **客户端半**：esbuild → CJS，再用 `window.__ModuleLoader__.load({ id, factory(require) })` 外壳包起来；`react`、`react/jsx-runtime`、`react-dom`、`@deepseek-ai/*` 全部 external，由平台模块表提供。
 - **类型**：`tsc --emitDeclarationOnly` → `lib/types/**`；`exports` 同时提供 `types` 与 `default`。
 - **包清单**：`dsh.bundle.patch`（装哪个 Loader row）、`dsh.client.platform = 'web'`、`manifestVersion: 1`。
-- **发布**：`private: true` 起步；转公开时改 `private` 并补 `repository` / `files` / `keywords`。版本语义按 minor 递增，prefs `version` 字段独立演进。
+- **仓库形态**：仓库公开，`private: true` 表示不发 npm，用户通过 GitHub 安装；`lib/` 随源码入库，CI 校验构建产物与源码一致。版本语义按 minor 递增，prefs `version` 字段独立演进。
 
 ## 11. 测试策略
 
@@ -278,29 +278,6 @@ src/
 ├─ types/assets.d.ts      ✅ CSS 文本导入声明
 test/                     ✅ 5 个文件 / 39 例
 docs/                     ✅ 本设计与 ADR
-```text
-src/
-├─ shared/
-│  ├─ prefs.ts            ✅ 模型/归一化/wire/尺寸解析
-│  └─ panel-css.ts        ✅ CSS 生成
-├─ host/
-│  ├─ index.ts            ✅ Config + settings 集成 + 路由适配
-│  └─ route.ts            ✅ 无 HTTP 依赖的请求处理与校验
-├─ client/
-│  ├─ index.ts            ✅ apply：加载/样式/tab/生命周期/locale
-│  ├─ api.ts              ✅ 宿主路由客户端
-│  ├─ store.ts            ✅ 乐观状态 + 防抖 + 回滚 + 冲突刷新
-│  ├─ style.ts            ✅ 单例样式控制器
-│  ├─ ui-style.ts         ✅ 静态 section 样式注入
-│  ├─ i18n.ts             ✅ zh/en 文案
-│  ├─ TweakitSection.tsx  ✅ settings.section 页面
-│  └─ tweaks/
-│     └─ settings-panel/  ✅ 尺寸分组组件
-├─ types/assets.d.ts      ✅ CSS 文本导入声明
-test/                     ✅ 6 个文件 / 46 例
-docs/                     ✅ 本设计与 ADR
-```
-
 ## 13. 已知限制
 
 - 只支持内置 tweak；外部注册 API 未实现。
@@ -315,7 +292,7 @@ docs/                     ✅ 本设计与 ADR
 
 - [ADR-0001：用 DSH settings 服务持久化偏好](decisions/0001-persist-prefs-in-dsh-settings.md)
 - [ADR-0002：设置面板尺寸三模式](decisions/0002-settings-panel-sizing-modes.md)
-- [ADR-0003：配置驱动的 tweak 表单（评估）](decisions/0003-config-driven-forms.md)
+- [ADR-0003：配置驱动的 tweak 表单](decisions/0003-config-driven-forms.md)
 ## 15. 实现与验收摘要（0.1.0）
 
 - 宿主：`Config` 4 个 volatile 字段；`settings.configure({ auto: false })`；无自建路由，持久化完全交给 DSH settings 服务。

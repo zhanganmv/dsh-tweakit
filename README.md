@@ -1,142 +1,121 @@
 # dsh-tweakit
 
 [![CI](https://github.com/zhanganmv/dsh-tweakit/actions/workflows/ci.yml/badge.svg)](https://github.com/zhanganmv/dsh-tweakit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/development.md)
 
-在 DeepSeek Harness 的设置里增加一个 **界面调整** tab，用来按需定制 Web 界面。
+**把 DeepSeek Harness 的设置窗口，调成你顺手的大小。**
 
-第一个 tweak 是**设置窗口尺寸**：默认、全屏、自定义三种模式，带边距控制，替代本地的 旧的本地尺寸插件。后续 tweak（字号、圆角、间距等）通过同一套注册表接入，不需要再改设置页骨架。
+`dsh-tweakit` 在设置里加一个 **界面调整** tab：默认、全屏、自定义三种尺寸模式，实时预览、自动保存、重启后还在。它替代旧的本地尺寸方案，也是后续所有界面 tweak 的统一入口。
 
-> **当前状态：0.1.0 — 已实现并在独立 `tweakit-dev` profile 完成浏览器验收。** 宿主半只保留 volatile `Config`；客户端通过官方 `ctx.configForms` 读写命名空间，字段由声明式 `TweakUi` 自动渲染；39 个单测/组件测试通过。desktop profile 已安装并通过 HMR 热加载。
+<p align="center">
+  <img src="docs/assets/settings-window.png" alt="DeepSeek Harness 设置 → 界面调整" width="760">
+</p>
 
-## 尺寸模式
+## 为什么装它
 
-| 模式      | 行为                                                 | 生效公式                                                                                 |
-| --------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `default` | 完全不接管，设置面板保持 DSH 原生的 800×800          | 不注入样式                                                                               |
-| `full`    | 全屏，保留自定义边距                                 | `w = 100vw - 2·margin`；`h = 100vh - 2·max(margin, overlayTop)`                          |
-| `custom`  | 自定义宽、高、边距；超出视口时自动收缩并保留四周边距 | `w = min(width, 100vw - 2·margin)`；`h = min(height, 100vh - 2·max(margin, overlayTop))` |
+DSH 的设置面板固定 **800×800**：在 4K 屏上浪费空间，在 1366×768 的笔记本上又显得局促。常见的做法是装一个只注入 CSS 的本地插件，把尺寸写死成 1360×1000——想改一次还得改代码。
 
-`overlayTop` 是框架为 macOS 交通灯预留的顶部安全区（`--dsh-frame-overlay-top`），即使把边距设为 0，面板也不会钻到窗口标题栏下面。移动端（`< 768px`）不接管，交给 DSH 自己的铺满布局。
+`dsh-tweakit` 把这件事变成设置项：
 
-首装默认值是 `custom / 1360×1000 / margin 24`，与旧的本地尺寸方案 的观感一致；想恢复原生就切到 `default`（见 [ADR-0002](docs/architecture/decisions/0002-settings-panel-sizing-modes.md)）。
-
-![界面调整 tab](docs/assets/settings-window.png)
-
-## 已验证（dev profile）
-
-在 `tweakit-dev`（`dsh-base + dsh-web-app + dsh-tweakit`）中实测：
-
-- 视口 1280×577，`custom 1360×1000 / margin 24` → 面板 **1232×529**；
-- `full / margin 0` → 面板 **1280×577**，坐标 (0,0)；
-- `custom 1200×800 / margin 30` → 面板 **1200×517**，坐标 (40,30)，四周边距保留；
-- `default` → 样式节点被移除，面板回到 shell 的 **800×529**；
-- 声明式表单写回走 `ctx.configForms`：把边距改为 40 后，面板变为 **1200×497**，`cordis.patch.yml` 出现 `settingsPanelMargin: 40`；
-- 「恢复默认」通过 `unset` 清空用户层，`dsh-tweakit` 配置行被移除，面板回到 1360×1000 的默认值；
-- 重启进程（端口变化）后仍按持久化值/默认值应用样式；
-- 旧的自建 HTTP 路由已删除：`/tweakit/api/prefs` 返回 404；
-- 窄视口 700×900 时本插件的 `@media (width >= 768px)` 不匹配，不接管面板；
-- 刷新页面后控制台无异常。
-
-## 声明式表单
-
-每个 tweak 的界面由 `shared/prefs.ts` 里的 `TweakUi` 描述，通用渲染器负责出控件：
-
-```ts
-fields: [
-  { kind: 'segmented', key: 'mode', field: 'mode', label: { zh: '模式', en: 'Mode' }, options: [...] },
-  { kind: 'slider', key: 'width', field: 'width', label: { zh: '宽度', en: 'Width' }, min: 640, max: 1920, step: 10, unit: 'px',
-    visibleWhen: (prefs) => prefs.mode === 'custom' },
-  { kind: 'number', key: 'margin', field: 'margin', label: { zh: '边距', en: 'Margin' }, min: 0, max: 64, step: 1, unit: 'px',
-    disabledWhen: (prefs) => prefs.mode === 'default' },
-]
-```
-
-- 支持 `segmented` / `slider`（滑杆 + 数字）/ `number` / `switch` / `text`，以及 `visibleWhen` / `disabledWhen`；
-- 复杂内容（尺寸读数、实时预览）作为 `extra` 逃生口，不破坏通用渲染器；
-- 宿主 `Config` 仍是校验/持久化权威，一条测试断言“字段集合 == prefs 键集合、wire 映射一一对应”，防止漂移；
-- 新增 tweak：加 prefs + descriptor + `TweakUi.fields` + 可选 effect，不再写 React 组件。
+- **三种模式**：保持原生 / 全屏铺满 / 自定义宽高，边距 0–64px 可调；
+- **实时预览**：拖动滑杆，面板立刻跟着变，不需要刷新；
+- **持久化**：通过 DSH 官方 settings 服务保存，换端口、重启应用都不丢；
+- **可逆**：切回「默认」或卸载插件，样式节点立即移除，DSH 恢复原样；
+- **为扩展而生**：字段是声明式的，后续字号、圆角、间距等 tweak 复用同一套表单与 tab。
 
 ## 安装
 
-从 GitHub 源码安装：
+### Web profile
 
 ```bash
 dsh plugin --profile web add github:zhanganmv/dsh-tweakit
-# desktop profile 由应用管理，可在应用内「插件」页安装，或使用应用自带 pnpm：
-dsh plugin --profile desktop add github:zhanganmv/dsh-tweakit
 ```
 
-当前已验证的 desktop profile 安装方式（2026-11-09）：
+### Desktop
 
-- `~/.dsh/profiles/desktop/package.json` 的 `dependencies` 增加 `dsh-tweakit: file:/Users/admin/Github/zhanganmv/dsh-tweakit`；
-- `dsh.profile.bundles` 末尾追加 `dsh-tweakit`；
-- 旧的本地尺寸插件 已从依赖和 bundles 移除（两者都用 `!important` 抢同一面板，不能共存）；
-- 通过 HMR 热加载生效，无需重启：宿主半换版后旧路由 `/tweakit/api/prefs` 从 401 变为 404，证明运行中的实例已重载。
+桌面端的 `desktop` profile 由应用独占，请在应用内的「插件」页安装同一个仓库地址。不要在和桌面应用同时运行时用 CLI 修改该 profile。
 
-注意：`file:` 安装的是**快照副本**（`~/.dsh/profiles/desktop/node_modules/dsh-tweakit`），改完源码后需要在应用内「插件」页重新安装，或在该 profile 用应用自带 pnpm 重新 `add`，新代码才会生效。
+> 如果之前装了 旧的本地尺寸插件，先卸载它：两者都靠 `!important` 抢同一个面板，同时存在会互相覆盖。
+
+安装后打开 **设置 → 界面调整**；如果 tab 没出现，重启一次 `dsh` 进程。
+
+### 升级与卸载
+
+```bash
+# 升级：重新执行安装命令；如果 pnpm 命中缓存，追加 --force 重新拉取
+dsh plugin --profile web add github:zhanganmv/dsh-tweakit --force
+
+# 卸载
+dsh plugin --profile web remove dsh-tweakit
+```
+
+## 使用
+
+| 模式      | 行为                                 | 实际尺寸                                                                                 |
+| --------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `default` | 完全不接管，保持 DSH 原生 800×800    | 不注入任何样式                                                                           |
+| `full`    | 全屏，保留自定义边距                 | `w = 100vw - 2·margin`；`h = 100vh - 2·max(margin, overlayTop)`                          |
+| `custom`  | 自定义宽、高、边距；超出视口自动收缩 | `w = min(width, 100vw - 2·margin)`；`h = min(height, 100vh - 2·max(margin, overlayTop))` |
+
+`overlayTop` 是 macOS 交通灯预留的顶部安全区。即使边距设为 0，面板也不会钻到标题栏下面。窗口宽度 `< 768px` 时不接管，交给 DSH 自己的移动布局。
+
+首装默认值是 `custom / 1360×1000 / margin 24`，和旧方案的观感一致。点「恢复默认」会清空用户层配置，回到这组默认值。
 
 ## 兼容与权限
 
-- **DSH 版本**：开发与验收基于 `0.2.1-rc.3`；更低版本未验证。
-- **Profile**：`web` 与 `desktop` 均可；插件只依赖 `settings`、`configForms`、`slots` 三个客户端服务。
-- **权限**：不发起网络请求、不读取凭证、不写业务文件；只注册 `settings.section` 一个 tab，并通过 DSH settings 服务读写自己的命名空间 `dsh-tweakit`。
-- **作用范围**：仅向设置面板（`[role="dialog"][data-shortcut-modal="settings"]`）注入尺寸样式；`< 768px` 不接管。
-- **已知限制**：依赖 `data-shortcut-modal` 标记，未来 shell 改名会让尺寸失效（tab 内会提示）；declarative 表单目前覆盖数字/滑杆/分段/开关/文本五类字段。
+- **DSH**：`0.2.1-rc.3` 实测通过；web 与 desktop profile 均可。更早版本未验证。
+- **运行时**：Node ≥ 22.6，pnpm 9。
+- **只使用公开扩展点**：`settings.section` 槽位、`ctx.configForms`、`ctx.locale`；不 patch DSH 源码、不改 hash 类名。
+- **权限最小化**：不发起网络请求、不读取凭证、不写业务文件；只读写自己的 settings 命名空间 `dsh-tweakit`。
+- **作用范围**：只向设置面板 `[role="dialog"][data-shortcut-modal="settings"]` 注入尺寸样式。
+- **已知限制**：依赖上面的 `data-shortcut-modal` 标记；如果未来 shell 改名，tab 会显示“未检测到设置面板标记”的提示，需要跟进适配。
 
-## 开发
+## 路线图
 
-```bash
-pnpm install
-pnpm check        # typecheck + lint + format:check + test + build
-pnpm test         # Vitest
-pnpm build        # lib/host.js + lib/client.js + lib/types/**
-pnpm build:watch  # 监听 src/（不重新生成 d.ts）
-```
+| 能力                             | 状态     |
+| -------------------------------- | -------- |
+| 设置窗口尺寸（默认/全屏/自定义） | ✅ 0.1.0 |
+| 字号与信息密度                   | 候选     |
+| 圆角与间距                       | 候选     |
+| 侧栏 / 内容区宽度                | 候选     |
+| 动效与过渡                       | 候选     |
 
-环境要求：Node ≥ 22.6、pnpm 9。
+候选不是承诺，按 issue 的 👍 和实际反馈排期。想加什么，欢迎开 issue 描述你的使用场景。
 
-验证环境（功能实现后）：独立的 `tweakit-dev` profile + 独立端口的 `dsh web`，不触碰当前的 desktop 会话。
+## 参与贡献
 
-## 目录结构
+- **报 Bug / 提建议**：开 [issue](https://github.com/zhanganmv/dsh-tweakit/issues/new/choose)，附 DSH 版本、profile、复现步骤和截图（UI 问题最好有录屏）。
+- **改代码**：开发环境、测试、新增 tweak 的完整步骤见 [docs/development.md](docs/development.md)。
+- **给 AI agent**：仓库约定写在 [AGENTS.md](AGENTS.md)。
+- **设计先行**：每个功能先写 `docs/features/` 下的需求文档；不可逆决策补一篇 ADR。
+- **PR 要求**：`pnpm check` 通过；UI 改动附前后截图；文档与代码同批提交。
 
-```
-src/
-├─ shared/            # 双端共享、无 DOM/Node 依赖
-│  ├─ prefs.ts        # 偏好模型、默认值、校验、wire 映射、尺寸解析
-│  └─ panel-css.ts    # 由偏好生成设置面板 CSS
-├─ host/index.ts      # 宿主半：volatile Config + settings 呈现策略
-└─ client/
-   ├─ index.ts        # apply：configForms store / 样式效果 / tab 注册
-   ├─ config-form.ts  # ctx.configForms 的结构化类型
-   ├─ store.ts        # 乐观预览 + 防抖 mutate + unset 重置
-   ├─ TweakForm.tsx   # 声明式字段 → 控件的通用渲染器
-   ├─ TweakCard.tsx   # 通用分组卡片
-   ├─ TweakitSection.tsx
-   └─ ui.css / style.ts / i18n.ts
-test/                 # 共享层 + store + 组件测试
-docs/
-├─ features/          # 需求设计
-└─ architecture/      # 架构设计与 ADR
-```
+## 文档
 
-## 设计文档
-
+- [文档索引](docs/README.md)
+- [开发指南](docs/development.md)
 - [设置窗口尺寸 — 需求设计](docs/features/2026-11-09-settings-window-size.md)
 - [插件架构设计](docs/architecture/plugin-architecture.md)
 - [ADR-0001：用 DSH settings 服务持久化偏好](docs/architecture/decisions/0001-persist-prefs-in-dsh-settings.md)
 - [ADR-0002：设置面板尺寸三模式](docs/architecture/decisions/0002-settings-panel-sizing-modes.md)
+- [ADR-0003：配置驱动的 tweak 表单](docs/architecture/decisions/0003-config-driven-forms.md)
+- [贡献指南](CONTRIBUTING.md)
 
-## 路线图
+## English
 
-| 阶段 | 内容                                             | 状态     |
-| ---- | ------------------------------------------------ | -------- |
-| M0   | 设计文档 + 工程骨架 + 共享模型                   | ✅       |
-| M1   | 可安装、tab 可见、client 生命周期                | ✅       |
-| M2   | 尺寸模型 + CSS 接管 + tab UI                     | ✅       |
-| M3   | settings 服务持久化 + revision 守卫 + 降级       | ✅       |
-| M4   | 组件/E2E 测试、dev profile 验收                  | ✅       |
-| —    | 安装到主 profile 并移除 旧的本地尺寸插件 | 待你确认 |
+**dsh-tweakit** adds an **Interface** tab to DeepSeek Harness settings. The first tweak resizes the settings dialog — `default`, `full`, or `custom` (width, height, margin) — with live preview and persistence through DSH's settings service. It replaces hard-coded local sizing plugins and is the base for future UI tweaks.
+
+```bash
+dsh plugin --profile web add github:zhanganmv/dsh-tweakit
+```
+
+Tested with DSH 0.2.1-rc.3 on the web and desktop profiles. It does not patch DSH, make network calls, or read credentials. Development setup: [docs/development.md](docs/development.md).
 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+如果它帮你少改了一次 CSS，欢迎点个 ⭐。

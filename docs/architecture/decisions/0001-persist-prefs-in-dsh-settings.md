@@ -22,8 +22,8 @@ DSH 0.2.x 的 `settings` 服务提供了恰好需要的能力：以 profile entr
 1. **命名空间 = Loader entry id**：`dsh-tweakit`（由 `cordis.patch.yml` 定义）。
 2. **Config 使用扁平 volatile 字段**：每个偏好一个 `.volatile()` 字段（如 `settingsPanelWidth`），schema 来自 DSH 提供的 `@deepseek-ai/schemastery`。扁平是为了让 patch、revision、profile YAML 都保持最简。
 3. **宿主半调用 `settings.configure({ auto: false })`**：本插件自带设置页，不在“设置 → 插件”里重复生成表单。
-4. **客户端不直接使用 settings RPC**：第三方命名空间不在 RPC 白名单内。宿主半注册 `GET/POST /tweakit/api/prefs`，在进程内调用 `ctx.settings.update(ns, patch, expectedRevision)`。
-5. **写入沿用官方 fence**：`ConfigForm.mutate(ops, expectedRevision)` 由 settings RPC 承载认证与 revision 守卫，不再有自建路由需要 fence。
+4. **客户端通过官方 `ctx.configForms` 读写**：P0 实测第三方命名空间可用，直接使用 `ConfigForm.mutate(ops, expectedRevision)`；认证与 revision 守卫由 DSH settings RPC 承载。
+5. **不保留自建路由**：0.1.0 早期版本曾注册 `GET/POST /tweakit/api/prefs`，P0/P2 后已删除；宿主半只剩 `Config` 与 `settings.configure({ auto: false })`。
 6. **降级**：命名空间 `status === 'unavailable'` 时客户端禁用控件并提示；没有第二条存储链路。
 
 ## 后果
@@ -37,7 +37,7 @@ DSH 0.2.x 的 `settings` 服务提供了恰好需要的能力：以 profile entr
 
 负面：
 
-- 必须提供宿主半与一条 HTTP 路由（约 100 行），比 localStorage 重；
+- 需要宿主半声明 volatile `Config`（约 30 行）；比 localStorage 多一个入口，但换来 schema 与 revision；
 - 依赖 settings 服务存在（Web/Desktop 组合默认满足）；
 - 扁平字段名会随 tweak 增多而变长，需要命名约定；
 - 写入会修改 profile 用户层，用户手动编辑 YAML 与 UI 写入共享同一个 revision 语义。

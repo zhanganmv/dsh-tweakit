@@ -1,10 +1,13 @@
 # 文档索引
 
-- [设置窗口尺寸 — 需求设计](features/2026-11-09-settings-window-size.md)
-- [插件架构设计](architecture/plugin-architecture.md)
+- [开发指南](development.md)：环境、构建、调试 profile、新增 tweak、验收与发布。
+- [设置窗口尺寸 — 需求设计](features/2026-11-09-settings-window-size.md)：第一个 tweak 的目标、模式规格与验收记录。
+- [插件架构设计](architecture/plugin-architecture.md)：双半架构、数据流、扩展模型与已知限制。
   - [ADR-0001：用 DSH settings 服务持久化偏好](architecture/decisions/0001-persist-prefs-in-dsh-settings.md)
   - [ADR-0002：设置面板尺寸三模式](architecture/decisions/0002-settings-panel-sizing-modes.md)
-  - [ADR-0003：配置驱动的 tweak 表单（评估）](architecture/decisions/0003-config-driven-forms.md)
+  - [ADR-0003：配置驱动的 tweak 表单](architecture/decisions/0003-config-driven-forms.md)
+
+其他入口：[README](../README.md) · [贡献指南](../CONTRIBUTING.md) · [AGENTS.md](../AGENTS.md)
 
 约定：
 
